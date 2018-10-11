@@ -1,0 +1,22 @@
+body{
+	background-image: url(loginbackground.jpg);
+}
+
+.loginscope{
+	margin: 200px;
+}
+
+.title1{
+	color: white;
+	text-align: center;
+}
+
+.loginbox{
+	background-color: rgba(225,225,225,0.5);
+	width: 100%;
+	height: 400px;
+}
+
+.loginform{
+	margin: 100px;
+}
