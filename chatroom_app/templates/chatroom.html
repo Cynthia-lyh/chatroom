@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Talk2Me--Use HTML5 new features</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta charset="utf-8">
+    <!-- Bootstrap -->
+    {% load staticfiles %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="{% static 'login/bootstrap-responsive.css' %}">
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+          <a class="navbar-brand" href="#">聊天室</a>
+      </div>
+      <div>
+          <ul class="nav navbar-nav">
+              <li class="active"><a href="#">博客</a></li>
+              <li><a href="#">联系我</a></li>
+          </ul>
+      </div>
+    </div>
+    </nav>
+
+    <!--<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <h3 id="myModalLabel">新用户进入</h3>
+      </div>
+      <div class="modal-body">
+        <div id="nickname_control" class="control-group">
+	  <div class="controls">
+	    <input type="text" id="NickName" placeholder="请输入您的昵称" autofocus>
+	    <span class="help-inline"></span>
+        </div>
+      </div>
+        <label class="radio">
+          爷们<input type="radio" name="options" value="b" checked>
+        </label>
+        <label class="radio">
+          妹子<input type="radio" name="options" value="g">
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="userInfo" data-dismiss="modal" aria-hidden="true">进入</button>
+      </div>
+    </div> -->
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="panel panel-default" >
+            <div class="panel-heading">Online People</div>
+            <div class="panel-body">
+                <p>快寻找你认识的小伙伴一起聊天吧~</p>
+            </div>
+            <div id="user-list">
+              <iframe align="center" width="100%" height="170" src="online_people"  frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+            </div>
+          </div>
+          <center><button class="btn btn-primary" id="quitChatroom">离开聊天室</button></center>
+        </div>
+        <div class="span9">
+          <fieldset class="well">
+            <p class="head text-success">
+              [+] 欢迎来到Talk2Me在线聊天室，本站基于HTML5多种新特性开发，Enjoy ur self!
+            </p>
+            <div class="text-info" id="chatlog" style="height:350px; overflow:auto;">
+            </div>
+          </fieldset>
+          <form class="form-inline" onsubmit="return false;">
+            <input type="text" id="messageTextBox" placeholder="输入聊天内容">
+            <button type="button" id="sendMessage" class="btn">发送</button>
+          </form>
+        </div>
+      </div>
+      <hr>
+      <footer>
+        <p>Written and coded by <a href="https://codepen.io/cynthia-lyh" target="_blank">Cynthia_lyh</a>.</p>
+      </footer>
+    </div>
+    <script src="{% static 'login/jquery-latest.js' %}"></script>
+    <script type="text/javascript">
+      var socket;
+      var wsServer = 'ws://172.20.10.5:8000/chatroom/chatroom'
+
+
+      //$('#myModal').modal('show'); 
+
+      function checkAvailable () 
+      {
+        if(!("WebSocket" in window))
+        {
+          if(this.MozWebSocket)
+          {
+            WebSocket = this.MozWebSocket;
+          }else
+          {
+            return false;
+          }
+        } 
+        return true;
+      }
+
+      var result = checkAvailable();
+      if (!result)
+      {
+        var message = "[-] 浏览器不支持或版本过低,无法使用Talk2Me。";
+        writeToChatLog(message,'text-error');
+      }else
+      {
+        socket = 
+        { 
+          start : function() 
+          { 
+            this._ws = new WebSocket(wsServer); 
+            this._ws.onopen = this.whenOpen; 
+            this._ws.onmessage = this.whenMessage; 
+            this._ws.onclose = this.whenClose; 
+            this._ws.onerror = this.whenError;
+          }, 
+          whenOpen : function(m) 
+          { 
+            var message = '[*] 成功连接聊天室服务器....';
+            writeToChatLog(message,'text-info');
+          }, 
+          sendMsg : function(message) 
+          { 
+            if (this._ws) 
+            { 
+              //console.log(typeof(message));
+              this._ws.send(message); 
+            }
+          }, 
+          whenMessage : function(m) 
+          { 
+            //console.log(m) ;
+            var received_msg = m.data;
+            //console.log(received_msg) ;
+            writeToChatLog(received_msg, "me");
+          }, 
+          whenClose : function(m) 
+          { 
+            this._ws = null; 
+            var message = '[-] 连接已断开.'
+            writeToChatLog(message,'text-error');
+          },
+          whenError : function(m)
+          {
+            var message = '[-] 出现未知错误，可能导致连接中断...';
+            writeToChatLog(message,'text-error');
+          } 
+        }
+      }; 
+
+      function writeToChatLog (message,message_type) 
+      {
+        //获取服务器时间：
+        //var now = new Date($.ajax({async: false}).getResponseHeader("Date"));
+        //var dateTime = now.toLocaleString();
+        //var now = new Date();
+        //var dateTime = now.toLocaleString();
+
+          //var username = dateTime + "&nbsp"+ message + "说：";
+          //document.getElementById('chatlog').innerHTML += '<p class=\"'+message_type+'\">'+username+'</p>';
+          document.getElementById('chatlog').innerHTML += '<p class=\"'+message_type+'\">'+message+'</p>';
+      }
+
+      socket.start();
+
+      document.getElementById('sendMessage').addEventListener('click',function()
+      {
+        message = document.getElementById('messageTextBox').value;
+        var msg = new Object;
+        msg.type = "POST";
+        msg.username = "{{username}}";
+        msg.context = message;
+        //msg.to = '';
+        socket.sendMsg(JSON.stringify(msg));
+        document.getElementById("messageTextBox").value="";
+        
+      },true);
+      var sendMessage = document.getElementById("messageTextBox");
+      sendMessage.onkeypress=function(event){
+        if(event.which === 13) { 
+        //点击回车要执行的事件
+        message = document.getElementById('messageTextBox').value;
+        var msg = new Object;
+        msg.type = "POST";
+        msg.username = "{{username}}";
+        msg.context = message;
+        //msg.to = '';
+        //console.log(msg) ;
+        socket.sendMsg(JSON.stringify(msg));
+        document.getElementById("messageTextBox").value="";
+        }
+      }
+
+      /*$(document).ready(function(){
+
+        //online people
+        $.ajax({
+                   type: "GET",
+                   url: "userlist",
+                   async: false,
+                   success: function(data){
+                    var html = "";
+                    html += "<div>";
+                    html += "<p>" + data.username + "</p>";
+                      html += "</div>";
+                    $("#user-list").html(html);
+                  }
+        });
+      });*/
+
+
+        //$("#user-list").load("online_people");
+        
+  
+
+
+
+    </script>
+  </body>
+</html>

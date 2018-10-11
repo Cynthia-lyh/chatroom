@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+{% load userlist_tag %}
+{% render_logged_in_user_list %}
+
+<script type="text/javascript">
+	function myrefresh(){
+		window.location.reload();
+	}
+	setTimeout('myrefresh()',10000); //指定1秒刷新一次
+</script>
+
+</body>
+</html>
